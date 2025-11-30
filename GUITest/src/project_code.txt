@@ -1,0 +1,2884 @@
+
+====================
+File: .\Main.java
+====================
+
+// Press Shift twice to open the Search Everywhere dialog and type `show whitespaces`,
+// then press Enter. You can now see whitespace characters in your code.
+public class Main {
+    public static void main(String[] args) {
+        // Press Alt+Enter with your caret at the highlighted text to see how
+        // IntelliJ IDEA suggests fixing it.
+        System.out.printf("Hello and welcome!");
+
+        // Press Alt+R or click the green arrow button in the gutter to run the code.
+        for (int i = 1; i <= 5; i++) {
+
+            // Press Shift+F9 to start debugging your code. We have set one breakpoint
+            // for you, but you can always add more by pressing Ctrl+F8.
+            System.out.println("i = " + i);
+        }
+    }
+}
+
+====================
+File: .\project_code.txt
+====================
+
+
+
+====================
+File: .\GUIArithmeticOperate\AdditionOperation.java
+====================
+
+package GUIArithmeticOperate;
+
+public class AdditionOperation extends BinaryOperation{
+    public AdditionOperation(int op1, int op2) {
+        super(op1, op2, '+');
+    }
+
+    @Override
+    public int calculate() {
+        return operand1+operand2;
+    }
+
+    @Override
+    public boolean isValid() {
+        return true;
+    }
+}
+
+
+
+====================
+File: .\GUIArithmeticOperate\ArithmeticApplication.java
+====================
+
+package GUIArithmeticOperate;
+
+import javax.swing.*;
+
+public class ArithmeticApplication {
+    public static void main(String[] args) {
+        // 设置系统外观
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        SwingUtilities.invokeLater(() -> {
+            MainFrame frame = new MainFrame();
+            frame.setVisible(true);
+        });
+    }
+}
+
+
+====================
+File: .\GUIArithmeticOperate\BinaryOperation.java
+====================
+
+package GUIArithmeticOperate;
+
+public abstract class BinaryOperation {
+    protected int operand1;
+    protected int operand2;
+    protected char operator; // 运算符
+
+    public BinaryOperation(int op1, int op2, char op) {
+        this.operand1 = op1;
+        this.operand2 = op2;
+        this.operator = op;
+    }
+
+    // 抽象方法，子类必须实现
+    public abstract int calculate();   // 抽象出运算方法
+    public abstract boolean isValid(); // 验证算式是否合法
+
+
+    public String toString() {
+        return operand1 + " " + operator + " " + operand2 + " = ";
+    }
+
+    public String getFullExpression() {
+        return operand1 + " " + operator + " " + operand2 + " = " + calculate();
+    }
+
+    public int getOperand1() {
+        return operand1;
+    }
+
+    public int getOperand2() {
+        return operand2;
+    }
+
+    public char getOperator() {
+        return operator;
+    }
+}
+
+
+
+
+====================
+File: .\GUIArithmeticOperate\ExerciseBasePanel.java
+====================
+
+package GUIArithmeticOperate;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
+
+public class ExerciseBasePanel extends JPanel {
+    private JTextArea baseInfoArea; // 算式基基本信息显示
+    private JButton generateBaseBtn;
+    private JButton viewBaseBtn;
+    private JButton clearBtn;
+
+    private JSpinner maxOperandSpinner;
+    private JComboBox<String> baseTypeCombo;    // 算式基类型选择
+    private JProgressBar progressBar;   // 进度条
+
+    private OperationBase operationBase;
+
+    public ExerciseBasePanel() {
+        operationBase = new OperationBase(100); // 默认最大操作数100
+        initializeUI();
+    }
+
+    private void initializeUI() {
+        setLayout(new BorderLayout(10, 10));
+        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // 顶部设置面板
+        add(createSettingsPanel(), BorderLayout.NORTH);
+        // 中间信息显示区域
+        add(createInfoPanel(), BorderLayout.CENTER);
+        // 底部按钮面板
+        add(createButtonPanel(), BorderLayout.SOUTH);
+    }
+
+    /**
+     * 创建设置面板
+     */
+    private JPanel createSettingsPanel() {
+        JPanel panel = new JPanel(new GridLayout(2, 4, 10, 10));
+        panel.setBorder(BorderFactory.createTitledBorder("算式基设置"));
+
+        // 最大操作数设置
+        panel.add(new JLabel("最大操作数:"));
+        maxOperandSpinner = new JSpinner(new SpinnerNumberModel(100, 10, 1000, 10));
+        panel.add(maxOperandSpinner);
+
+        // 算式基类型
+        panel.add(new JLabel("算式基类型:"));
+        baseTypeCombo = new JComboBox<>(new String[]{"加法算式基", "减法算式基", "加减混合算式基"});
+        panel.add(baseTypeCombo);
+
+        // 进度条
+        panel.add(new JLabel("生成进度:"));
+        progressBar = new JProgressBar(0, 100);
+        progressBar.setStringPainted(true);
+        panel.add(progressBar);
+
+        return panel;
+    }
+
+    /**
+     * 算式基信息面板
+     * @return
+     */
+    private JPanel createInfoPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("算式基信息"));
+
+        baseInfoArea = new JTextArea(15, 50);
+        baseInfoArea.setEditable(false);
+        baseInfoArea.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        JScrollPane scrollPane = new JScrollPane(baseInfoArea);
+
+        panel.add(scrollPane, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JPanel createButtonPanel() {
+        JPanel panel = new JPanel(new FlowLayout());
+
+        generateBaseBtn = new JButton("生成算式基");
+        viewBaseBtn = new JButton("查看算式基");
+        clearBtn = new JButton("清空显示");
+
+        panel.add(generateBaseBtn);
+        panel.add(viewBaseBtn);
+        panel.add(clearBtn);
+
+        setupEventHandlers();
+
+        return panel;
+    }
+
+    private void setupEventHandlers() {
+        generateBaseBtn.addActionListener(this::generateOperationBase);
+        viewBaseBtn.addActionListener(this::viewOperationBase);
+        clearBtn.addActionListener(e -> baseInfoArea.setText(""));
+    }
+
+    /**
+     * 生成算式基的具体实现
+     */
+    private void generateOperationBase(ActionEvent e) {
+        try {
+            int maxOperand = (int) maxOperandSpinner.getValue();
+            String baseType = (String) baseTypeCombo.getSelectedItem();
+
+            // 更新OperationBase的最大操作数
+            operationBase = new OperationBase(maxOperand);
+
+            // 在后台线程中生成算式基，避免界面卡顿
+            SwingWorker<Void, String> worker = new SwingWorker<Void, String>() {
+                @Override
+                protected Void doInBackground() throws Exception {
+                    publish("开始生成" + baseType + "...\n");
+                    publish("最大操作数: " + maxOperand + "\n");
+                    publish("生成时间: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + "\n");
+                    publish("----------------------------------------\n");
+
+                    long startTime = System.currentTimeMillis();
+
+                    // 根据选择的类型生成不同的算式基
+                    switch (baseType) {
+                        case "加法算式基":
+                            generateAdditionBase();
+                            break;
+                        case "减法算式基":
+                            generateSubtractionBase();
+                            break;
+                        case "加减混合算式基":
+                            generateMixedBase();
+                            break;
+                    }
+
+                    long endTime = System.currentTimeMillis();
+                    long duration = endTime - startTime;
+
+                    publish("----------------------------------------\n");
+                    publish("生成完成！耗时: " + duration + " 毫秒\n");
+
+                    return null;
+                }
+
+                @Override
+                protected void process(List<String> chunks) {
+                    for (String message : chunks) {
+                        baseInfoArea.append(message);
+                    }
+                    // 滚动到最新内容
+                    baseInfoArea.setCaretPosition(baseInfoArea.getDocument().getLength());
+                }
+
+                @Override
+                protected void done() {
+                    generateBaseBtn.setEnabled(true);
+                    progressBar.setValue(100);
+                }
+            };
+
+            generateBaseBtn.setEnabled(false);
+            progressBar.setValue(0);
+            worker.execute();
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "生成算式基失败: " + ex.getMessage(),
+                    "错误", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
+
+    /**
+     * 生成加法算式基 - 正斜三角形
+     */
+    private void generateAdditionBase() {
+        try {
+            List<BinaryOperation> additionBase = operationBase.getAdditionBase();
+            int totalCount = additionBase.size();
+
+            baseInfoArea.append("=== 加法算式基生成详情 ===\n");
+            baseInfoArea.append("算式基大小: " + totalCount + " 个算式\n");
+            baseInfoArea.append("生成规则: 正斜三角形 (i <= j)\n\n");
+
+            // 显示前20个算式作为示例
+            baseInfoArea.append("前20个算式示例:\n");
+            int displayCount = Math.min(20, totalCount);
+            for (int i = 0; i < displayCount; i++) {
+                BinaryOperation operation = additionBase.get(i);
+                baseInfoArea.append(String.format("%3d. %2d + %2d = %3d\n",
+                        i + 1, operation.getOperand1(), operation.getOperand2(), operation.calculate()));
+            }
+
+            if (totalCount > 20) {
+                baseInfoArea.append("... 还有 " + (totalCount - 20) + " 个算式\n");
+            }
+
+            // 统计信息
+            baseInfoArea.append("\n统计信息:\n");
+            baseInfoArea.append("- 最小和: " + getMinSum(additionBase) + "\n");
+            baseInfoArea.append("- 最大和: " + getMaxSum(additionBase) + "\n");
+            baseInfoArea.append("- 平均和: " + String.format("%.2f", getAverageSum(additionBase)) + "\n");
+
+            // 保存到文件
+            saveBaseToFile(additionBase, "addition_base.csv", "加法");
+
+        } catch (Exception e) {
+            throw new RuntimeException("生成加法算式基失败", e);
+        }
+    }
+
+    /**
+     * 生成减法算式基 - 倒斜三角形
+     */
+    private void generateSubtractionBase() {
+        try {
+            List<BinaryOperation> subtractionBase = operationBase.getSubtractionBase();
+            int totalCount = subtractionBase.size();
+
+            baseInfoArea.append("=== 减法算式基生成详情 ===\n");
+            baseInfoArea.append("算式基大小: " + totalCount + " 个算式\n");
+            baseInfoArea.append("生成规则: 倒斜三角形 (i >= j)\n\n");
+
+            // 显示前20个算式作为示例
+            baseInfoArea.append("前20个算式示例:\n");
+            int displayCount = Math.min(20, totalCount);
+            for (int i = 0; i < displayCount; i++) {
+                BinaryOperation operation = subtractionBase.get(i);
+                baseInfoArea.append(String.format("%3d. %2d - %2d = %3d\n",
+                        i + 1, operation.getOperand1(), operation.getOperand2(), operation.calculate()));
+            }
+
+            if (totalCount > 20) {
+                baseInfoArea.append("... 还有 " + (totalCount - 20) + " 个算式\n");
+            }
+
+            // 统计信息
+            baseInfoArea.append("\n统计信息:\n");
+            baseInfoArea.append("- 最小差: " + getMinDifference(subtractionBase) + "\n");
+            baseInfoArea.append("- 最大差: " + getMaxDifference(subtractionBase) + "\n");
+            baseInfoArea.append("- 平均差: " + String.format("%.2f", getAverageDifference(subtractionBase)) + "\n");
+
+            // 保存到文件
+            saveBaseToFile(subtractionBase, "subtraction_base.csv", "减法");
+
+        } catch (Exception e) {
+            throw new RuntimeException("生成减法算式基失败", e);
+        }
+    }
+
+    /**
+     * 生成混合算式基
+     */
+    private void generateMixedBase() {
+        try {
+            List<BinaryOperation> additionBase = operationBase.getAdditionBase();
+            List<BinaryOperation> subtractionBase = operationBase.getSubtractionBase();
+
+            int additionCount = additionBase.size();
+            int subtractionCount = subtractionBase.size();
+            int totalCount = additionCount + subtractionCount;
+
+            baseInfoArea.append("=== 加减混合算式基生成详情 ===\n");
+            baseInfoArea.append("总算式数量: " + totalCount + " 个算式\n");
+            baseInfoArea.append("- 加法算式: " + additionCount + " 个\n");
+            baseInfoArea.append("- 减法算式: " + subtractionCount + " 个\n\n");
+
+            // 显示前10个加法和10个减法算式作为示例
+            baseInfoArea.append("加法算式示例:\n");
+            int addDisplayCount = Math.min(10, additionCount);
+            for (int i = 0; i < addDisplayCount; i++) {
+                BinaryOperation operation = additionBase.get(i);
+                baseInfoArea.append(String.format("%3d. %2d + %2d = %3d\n",
+                        i + 1, operation.getOperand1(), operation.getOperand2(), operation.calculate()));
+            }
+
+            baseInfoArea.append("\n减法算式示例:\n");
+            int subDisplayCount = Math.min(10, subtractionCount);
+            for (int i = 0; i < subDisplayCount; i++) {
+                BinaryOperation operation = subtractionBase.get(i);
+                baseInfoArea.append(String.format("%3d. %2d - %2d = %3d\n",
+                        i + 1, operation.getOperand1(), operation.getOperand2(), operation.calculate()));
+            }
+
+            // 统计信息
+            baseInfoArea.append("\n统计信息:\n");
+            baseInfoArea.append("- 加法最小和: " + getMinSum(additionBase) + "\n");
+            baseInfoArea.append("- 加法最大和: " + getMaxSum(additionBase) + "\n");
+            baseInfoArea.append("- 减法最小差: " + getMinDifference(subtractionBase) + "\n");
+            baseInfoArea.append("- 减法最大差: " + getMaxDifference(subtractionBase) + "\n");
+
+            // 保存到文件
+            saveMixedBaseToFile(additionBase, subtractionBase, "mixed_base.csv");
+
+        } catch (Exception e) {
+            throw new RuntimeException("生成混合算式基失败", e);
+        }
+    }
+
+    /**
+     * 保存算式基到文件
+     */
+    private void saveBaseToFile(List<BinaryOperation> base, String filename, String type) {
+        try {
+            // 统一确保目录存在
+            FileConfig.ensureExerciseDirExists();
+
+            String fullPath = FileConfig.EXERCISE_DIR + filename;
+            try (java.io.PrintWriter writer = new java.io.PrintWriter(
+                    new java.io.OutputStreamWriter(
+                            new java.io.FileOutputStream(fullPath),
+                            java.nio.charset.StandardCharsets.UTF_8))) {
+
+                writer.write("\uFEFF"); // UTF-8 BOM
+                writer.println("序号,题型,操作数1,操作数2,运算符,结果");
+
+                for (int i = 0; i < base.size(); i++) {
+                    BinaryOperation operation = base.get(i);
+                    writer.printf("%d,%s,%d,%d,%c,%d%n",
+                            i + 1,
+                            type,
+                            operation.getOperand1(),
+                            operation.getOperand2(),
+                            operation.getOperator(),
+                            operation.calculate()
+                    );
+                }
+            }
+
+            baseInfoArea.append("\n算式基已保存到: " + fullPath + "\n");
+            baseInfoArea.append("文件大小: " + new File(fullPath).length() + " 字节\n");
+
+        } catch (Exception e) {
+            baseInfoArea.append("保存文件失败: " + e.getMessage() + "\n");
+        }
+    }
+
+    /**
+     * 保存混合算式基到文件
+     */
+    private void saveMixedBaseToFile(List<BinaryOperation> additionBase,
+                                     List<BinaryOperation> subtractionBase,
+                                     String filename) {
+        try {
+            FileConfig.ensureExerciseDirExists();
+            String fullPath = FileConfig.EXERCISE_DIR + filename;
+
+            try (java.io.PrintWriter writer = new java.io.PrintWriter(
+                    new java.io.OutputStreamWriter(
+                            new java.io.FileOutputStream(fullPath),
+                            java.nio.charset.StandardCharsets.UTF_8))) {
+
+                writer.write("\uFEFF");
+                writer.println("序号,题型,操作数1,操作数2,运算符,结果");
+
+                int index = 1;
+
+                // 写入加法算式
+                for (BinaryOperation operation : additionBase) {
+                    writer.printf("%d,加法,%d,%d,%c,%d%n",
+                            index++,
+                            operation.getOperand1(),
+                            operation.getOperand2(),
+                            operation.getOperator(),
+                            operation.calculate()
+                    );
+                }
+
+                // 写入减法算式
+                for (BinaryOperation operation : subtractionBase) {
+                    writer.printf("%d,减法,%d,%d,%c,%d%n",
+                            index++,
+                            operation.getOperand1(),
+                            operation.getOperand2(),
+                            operation.getOperator(),
+                            operation.calculate()
+                    );
+                }
+            }
+
+            baseInfoArea.append("\n混合算式基已保存到: " + fullPath + "\n");
+            baseInfoArea.append("文件大小: " + new File(fullPath).length() + " 字节\n");
+
+        } catch (Exception e) {
+            baseInfoArea.append("保存混合算式基文件失败: " + e.getMessage() + "\n");
+        }
+    }
+
+    // 统计方法
+    private int getMinSum(List<BinaryOperation> base) {
+        return base.stream().mapToInt(BinaryOperation::calculate).min().orElse(0);
+    }
+
+    private int getMaxSum(List<BinaryOperation> base) {
+        return base.stream().mapToInt(BinaryOperation::calculate).max().orElse(0);
+    }
+
+    private double getAverageSum(List<BinaryOperation> base) {
+        return base.stream().mapToInt(BinaryOperation::calculate).average().orElse(0);
+    }
+
+    private int getMinDifference(List<BinaryOperation> base) {
+        return base.stream().mapToInt(BinaryOperation::calculate).min().orElse(0);
+    }
+
+    private int getMaxDifference(List<BinaryOperation> base) {
+        return base.stream().mapToInt(BinaryOperation::calculate).max().orElse(0);
+    }
+
+    private double getAverageDifference(List<BinaryOperation> base) {
+        return base.stream().mapToInt(BinaryOperation::calculate).average().orElse(0);
+    }
+
+    private void viewOperationBase(ActionEvent e) {
+        // 查看算式基的实现
+        baseInfoArea.append("当前内存中的算式基信息:\n");
+        baseInfoArea.append("- 加法算式数量: " + operationBase.getAdditionBase().size() + "\n");
+        baseInfoArea.append("- 减法算式数量: " + operationBase.getSubtractionBase().size() + "\n");
+        baseInfoArea.append("----------------------------------------\n");
+    }
+
+    private void loadBaseFromFile(File file) {
+        try {
+            baseInfoArea.append("正在加载算式基文件: " + file.getName() + "\n");
+            // 这里可以实现从文件加载算式基的逻辑
+            baseInfoArea.append("文件加载完成\n");
+        } catch (Exception ex) {
+            baseInfoArea.append("加载失败: " + ex.getMessage() + "\n");
+        }
+    }
+}
+
+
+====================
+File: .\GUIArithmeticOperate\ExerciseGenerationPanel.java
+====================
+
+package GUIArithmeticOperate;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+public class ExerciseGenerationPanel extends JPanel {
+    private JComboBox<String> exerciseTypeCombo;    // 题目类型
+    private JSpinner questionCountSpinner;
+    private JSpinner setCountSpinner;
+    private JTextField filenameField;   // 基础文件名输入
+    private JTextArea logArea;
+    private ExerciseManager exerciseManager;    // 习题管理器
+
+    // 事件监听器列表，用于面板间通信
+    private List<ActionListener> exerciseGeneratedListeners;
+
+    public ExerciseGenerationPanel(){
+        this.exerciseGeneratedListeners = new ArrayList<>();
+        exerciseManager = new ExerciseManager(new OperationBase(100));
+        initializeUI();
+    }
+
+    // 添加生成完成事件监听器
+    public void addExerciseGeneratedListener(ActionListener listener){
+        exerciseGeneratedListeners.add(listener);
+    }
+
+    // 移除生成完成事件监听器
+    public void removeExerciseGeneratedListener(ActionListener listener) {
+        exerciseGeneratedListeners.remove(listener);
+    }
+
+    // 触发生成完成事件
+    private void fireExerciseGenerated() {
+        ActionEvent event = new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "exerciseGenerated");
+        for (ActionListener listener : exerciseGeneratedListeners) {
+            listener.actionPerformed(event);
+        }
+    }
+
+    private void initializeUI(){
+        setLayout(new BorderLayout(10, 10));
+        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // 输入面板
+        JPanel inputPanel = createInputPanel();
+        // 日志面板
+        JPanel logPanel = createLogPanel();
+        // 按钮面板
+        JPanel buttonPanel = createButtonPanel();
+
+        add(inputPanel, BorderLayout.NORTH);
+        add(logPanel, BorderLayout.CENTER);
+        add(buttonPanel, BorderLayout.SOUTH);
+    }
+
+    /**
+     * 创建输入设置面板
+     */
+    private JPanel createInputPanel() {
+        JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
+        panel.setBorder(BorderFactory.createTitledBorder("题目生成设置"));
+
+        // 题目类型
+        panel.add(new JLabel("题目类型:"));
+        exerciseTypeCombo = new JComboBox<>(new String[]{"加法", "减法", "加减混合"});
+        panel.add(exerciseTypeCombo);
+
+        // 题目数量
+        panel.add(new JLabel("每套题目数量:"));
+        questionCountSpinner = new JSpinner(new SpinnerNumberModel(10, 1, 100, 1));
+        panel.add(questionCountSpinner);
+
+        // 套数
+        panel.add(new JLabel("生成套数:"));
+        setCountSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 50, 1));
+        panel.add(setCountSpinner);
+
+        // 文件名
+        panel.add(new JLabel("基础文件名:"));
+        filenameField = new JTextField("exercises");
+        panel.add(filenameField);
+
+        return panel;
+    }
+
+    /**
+     * 创建操作日志面板
+     */
+    private JPanel createLogPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("操作日志"));
+
+        logArea = new JTextArea(10, 50);
+        logArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(logArea);
+
+        panel.add(scrollPane, BorderLayout.CENTER);
+        return panel;
+    }
+
+    /**
+     * 创建按钮面板
+     */
+    private JPanel createButtonPanel() {
+        JPanel panel = new JPanel(new FlowLayout());
+
+        JButton generateBtn = new JButton("生成题目");
+        generateBtn.addActionListener(this::generateExercises);
+
+        JButton clearBtn = new JButton("清空日志");
+        clearBtn.addActionListener(e -> logArea.setText(""));
+
+        panel.add(generateBtn);
+        panel.add(clearBtn);
+
+        return panel;
+    }
+
+    /**
+     * 生成习题的核心方法
+     */
+    private void generateExercises(ActionEvent e) {
+        try {
+            String type = (String) exerciseTypeCombo.getSelectedItem();
+            int questionCount = (int) questionCountSpinner.getValue();
+            int setCount = (int) setCountSpinner.getValue();
+            String baseFilename = filenameField.getText().trim();
+
+            if (baseFilename.isEmpty()){
+                JOptionPane.showMessageDialog(this, "请输入基础文件名","提示",JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            int additionCount = 0;
+            int subtractionCount = 0;
+
+            switch (type) {
+                case "加法":
+                    additionCount = questionCount;
+                    break;
+                case "减法":
+                    subtractionCount = questionCount;
+                    break;
+                case "加减混合":
+                    additionCount = questionCount / 2;
+                    subtractionCount = questionCount - additionCount;
+                    break;
+            }
+
+            // 确保目标目录存在
+            File exerciseDir = new File(FileConfig.EXERCISE_DIR);
+            if (!exerciseDir.exists()) {
+                exerciseDir.mkdirs();
+            }
+
+            // 记录生成前的文件列表
+            Set<String> existingFiles = getExistingCSVFiles();
+
+            // 使用 ExerciseManager 的生成方法
+            exerciseManager.generateMultipleExerciseSets(setCount, additionCount, subtractionCount, baseFilename);
+
+            // 获取新生成的文件
+            Set<String> newFiles = getExistingCSVFiles();
+            newFiles.removeAll(existingFiles);
+
+            logArea.append("成功生成 " + setCount + " 套" + type + "题目\n");
+            logArea.append("生成目录: " + FileConfig.EXERCISE_DIR + "\n");
+
+            if (!newFiles.isEmpty()){
+                logArea.append("生成的文件: " + String.join(", ", newFiles) + "\n");
+                for (String fileName : newFiles) {
+                    logArea.append("  " + fileName + "\n");
+                }
+            } else {
+                logArea.append("警告: 未检测到新生成的文件\n");
+                // 显示目标目录所有文件
+                File[] allFiles = exerciseDir.listFiles();
+                if (allFiles != null) {
+                    logArea.append("目标目录所有文件:\n");
+                    for (File file : allFiles) {
+                        logArea.append("  " + file.getName() + "\n");
+                    }
+                }
+            }
+
+            // 自动滚动到最后
+            logArea.setCaretPosition(logArea.getDocument().getLength());
+
+            // 触发生成完成事件
+            fireExerciseGenerated();
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "生成题目失败: " + ex.getMessage(),
+                    "错误", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+            logArea.append("生成失败："+ex.getMessage()+"\n");
+        }
+    }
+
+    // 扫描目标目录而不是当前目录
+    private Set<String> getExistingCSVFiles() {
+        Set<String> csvFiles = new HashSet<>();
+        File exerciseDir = new File(FileConfig.EXERCISE_DIR);
+        File[] files = exerciseDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".csv"));
+        if (files != null) {
+            for (File file : files) {
+                csvFiles.add(file.getName());   // 只返回文件名，不包含路径
+            }
+        }
+        return csvFiles;
+    }
+}
+
+====================
+File: .\GUIArithmeticOperate\ExerciseItem.java
+====================
+
+package GUIArithmeticOperate;
+
+/**
+ * 习题项：封装习题信息
+ */
+public class ExerciseItem {
+    private int questionNumber;
+    private String type;
+    private String question;
+    private int correctAnswer;
+    private Integer studentAnswer; // 学生答案
+    private boolean isCorrect;     // 是否正确
+
+    public ExerciseItem(int questionNumber, String type, String question, int correctAnswer) {
+        this.questionNumber = questionNumber;
+        this.type = type;
+        this.question = question;
+        this.correctAnswer = correctAnswer;
+        this.studentAnswer = null;
+        this.isCorrect = false;
+    }
+
+    public int getQuestionNumber() { return questionNumber; }
+    public String getType() { return type; }
+    public String getQuestion() { return question; }
+    public int getCorrectAnswer() { return correctAnswer; }
+
+    public Integer getStudentAnswer() { return studentAnswer; }
+    public void setStudentAnswer(Integer studentAnswer) {
+        this.studentAnswer = studentAnswer;
+        this.isCorrect = (studentAnswer != null && studentAnswer == correctAnswer);
+    }
+    public boolean isCorrect() { return isCorrect; }
+    public void setCorrect(boolean correct) { this.isCorrect = correct; }
+}
+
+====================
+File: .\GUIArithmeticOperate\ExerciseManager.java
+====================
+
+package GUIArithmeticOperate;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+
+/**
+ * 负责习题的生成、存储和批改
+ * 专门处理文件IO和批改逻辑
+ */
+public class ExerciseManager {
+    private OperationBase operationBase;
+    private Map<String,List<ExerciseItem>> exerciseSets;    // 存储多套习题
+    private Map<String,Map<Integer,Integer>> studentAnswers;    // 存储学生答案
+    private String basePath = FileConfig.EXERCISE_DIR;
+
+    public ExerciseManager(OperationBase operationBase) {
+        this.operationBase = operationBase;
+        this.exerciseSets = new HashMap<>();
+        this.studentAnswers = new HashMap<>();
+
+        // 通过 FileConfig 确保目录存在
+        FileConfig.ensureExerciseDirExists();
+    }
+
+    // 批量生成多套习题文件
+    public void  generateMultipleExerciseSets(int setCount, int additionCount, int subtractionCount, String baseFilename) {
+        // 确保文件名包含完整路径
+        if (!baseFilename.startsWith(basePath)){
+            baseFilename = basePath + baseFilename;
+        }
+
+        for (int i = 1; i <= setCount; i++) {
+            String filename = baseFilename + "_set" + i + ".csv";
+            generateExerciseSet(filename, additionCount, subtractionCount, i);
+        }
+        System.out.printf("成功生成 %d 套习题文件%n", setCount);
+    }
+
+    // 生成单套习题文件
+    private void generateExerciseSet(String filename, int additionCount, int subtractionCount, int setNumber) {
+        try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(
+                new FileOutputStream(filename), StandardCharsets.UTF_8))) {
+
+            writer.write("\uFEFF");
+            writer.println("题号,题型,题目,学生答案");
+
+            int questionNumber = 1;
+            List<ExerciseItem> exerciseSet = new ArrayList<>();
+
+            // 生成加法习题
+            List<BinaryOperation> additionExercises = operationBase.getRandomAdditionOperations(additionCount);
+            for (BinaryOperation operation : additionExercises) {
+                String question = formatQuestion(operation);
+                writer.printf("%d,加法,\"%s\",%n", questionNumber, question);
+
+                // 保存到内存中用于后续批改
+                exerciseSet.add(new ExerciseItem(
+                        questionNumber,
+                        "加法",
+                        question,
+                        operation.calculate() // 保存正确答案
+                ));
+                questionNumber++;
+            }
+
+            // 生成减法习题
+            List<BinaryOperation> subtractionExercises = operationBase.getRandomSubtractionOperations(subtractionCount);
+            for (BinaryOperation operation : subtractionExercises) {
+                String question = formatQuestion(operation);
+                writer.printf("%d,减法,\"%s\",%n", questionNumber, question);
+
+                exerciseSet.add(new ExerciseItem(
+                        questionNumber,
+                        "减法",
+                        question,
+                        operation.calculate() // 保存正确答案
+                ));
+                questionNumber++;
+            }
+
+            // 保存习题集到内存 - 使用文件名作为key，而不是完整路径
+            String fileKey = new File(filename).getName();
+            exerciseSets.put(fileKey, exerciseSet);
+
+            System.out.printf("习题集 %d 已生成: %s (%d道题)%n",
+                    setNumber, filename, exerciseSet.size());
+
+        } catch (IOException e) {
+            System.err.println("生成习题集失败: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 静态方法加载习题集,用于在线练习
+     */
+    public static List<ExerciseItem> loadExerciseSetStatic(String filename) {
+        try {
+            // 使用完整路径加载文件
+            String fullPath = FileConfig.EXERCISE_DIR + filename;
+            File file = new File(fullPath);
+
+            if (!file.exists()) {
+                System.err.println("文件不存在: " + fullPath);
+                return null;
+            }
+
+            System.out.println("文件存在，大小: " + file.length() + " bytes");
+
+            List<ExerciseItem> exercises = new ArrayList<>();
+
+            // 文件读取
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
+
+                String line;
+                boolean firstLine = true;
+
+                while ((line = reader.readLine()) != null) {
+                    // 跳过UTF-8 BOM和空行
+                    if (firstLine) {
+                        line = line.replace("\uFEFF", "");
+                        firstLine = false;
+                    }
+
+                    // 跳过标题行和空行
+                    if (line.trim().isEmpty() || line.startsWith("题号") || line.startsWith("题目")) {
+                        continue;
+                    }
+
+                    // 解析CSV行
+                    String[] parts = line.split(",", -1); // -1 保留空字段
+                    if (parts.length >= 3) {
+                        try {
+                            int questionNumber = Integer.parseInt(parts[0].trim());
+                            String type = parts[1].trim();
+                            String question = parts[2].trim().replace("\"", ""); // 移除引号
+
+                            // 从题目中解析出正确答案
+                            int correctAnswer = parseAnswerFromQuestion(question, type);
+
+                            exercises.add(new ExerciseItem(questionNumber, type, question, correctAnswer));
+
+                        } catch (NumberFormatException ex) {
+                            System.err.println("解析题目编号失败: " + line);
+                        }
+                    }
+                }
+            }
+            return exercises;
+
+        } catch (Exception e) {
+            System.err.println("加载习题集异常: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // 从题目中解析答案
+    private static int parseAnswerFromQuestion(String question, String type) {
+        try {
+            if (question.contains("＋") || question.contains("+")) { // 全角加号
+                String separator = question.contains("＋") ? "＋" : "\\+";
+                String[] operands = question.split(separator);
+                if (operands.length == 2) {
+                    int a = Integer.parseInt(operands[0].trim());
+                    int b = Integer.parseInt(operands[1].trim());
+                    return a + b;
+                }
+            } else if (question.contains("—") || question.contains("-")) { // 全角减号
+                String separator = question.contains("—") ? "—" : "-";
+                String[] operands = question.split(separator);
+                if (operands.length == 2) {
+                    int a = Integer.parseInt(operands[0].trim());
+                    int b = Integer.parseInt(operands[1].trim());
+                    return a - b;
+                }
+            }
+        } catch (NumberFormatException ex) {
+            System.err.println("解析题目答案失败: " + question);
+        }
+
+        return 0; // 默认值
+    }
+
+    /**
+     * 格式化题目显示
+     */
+    private String formatQuestion(BinaryOperation operation) {
+        if (operation instanceof AdditionOperation) {
+            return operation.getOperand1() + " ＋ " + operation.getOperand2();
+        } else if (operation instanceof SubtractOperation) {
+            return operation.getOperand1() + " — " + operation.getOperand2();
+        } else {
+            return operation.toString().replace("=", "").trim();
+        }
+    }
+
+    // 获取习题集列表
+    public Set<String> getExerciseSets() {
+        return exerciseSets.keySet();
+    }
+
+    // 获取学生列表
+    public Set<String> getStudents() {
+        return studentAnswers.keySet();
+    }
+
+    // 获取基础路径
+    public String getBasePath() {
+        return FileConfig.EXERCISE_DIR;
+    }
+}
+
+
+====================
+File: .\GUIArithmeticOperate\FileConfig.java
+====================
+
+package GUIArithmeticOperate;
+
+import java.io.File;
+
+/**
+ * 统一的文件路径配置类
+ */
+public class FileConfig {
+    // 习题集文件存储目录
+    public static final String EXERCISE_DIR =
+            System.getProperty("user.home")
+                    + File.separator + "exercise"
+                    + File.separator;
+
+    /**
+     * 确保目录存在（所有写文件前都可以先调用）
+     */
+    public static void ensureExerciseDirExists() {
+        File dir = new File(EXERCISE_DIR);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+    }
+}
+
+====================
+File: .\GUIArithmeticOperate\GradingPanel.java
+====================
+
+package GUIArithmeticOperate;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+
+
+/**
+ * 查看和导出批改结果，支持文件扫描和显示
+ */
+public class GradingPanel extends JPanel {
+    private JTable resultTable;
+    private DefaultTableModel tableModel;
+    private JTextArea detailArea;
+    private JLabel summaryLabel;    // 汇总信息标签
+
+    // 操作按钮
+    private JButton batchGradeBtn;
+    private JButton exportResultsBtn;
+    private JButton viewDetailsBtn;
+    private JButton refreshBtn;
+
+    private ExerciseManager exerciseManager;
+
+    public GradingPanel() {
+        exerciseManager = new ExerciseManager(new OperationBase(100));
+        initializeUI();
+    }
+
+    private void initializeUI() {
+        setLayout(new BorderLayout(10, 10));
+        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // 顶部按钮面板
+        add(createButtonPanel(), BorderLayout.NORTH);
+        // 中间结果表格
+        add(createTablePanel(), BorderLayout.CENTER);
+        // 底部详细信息
+        add(createDetailPanel(), BorderLayout.SOUTH);
+    }
+
+    /**
+     * 按钮面板
+     * @return
+     */
+    private JPanel createButtonPanel() {
+        JPanel panel = new JPanel(new FlowLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("批改操作"));
+
+        batchGradeBtn = new JButton("批量批改");
+        exportResultsBtn = new JButton("导出批改结果");
+        viewDetailsBtn = new JButton("查看详情");
+        refreshBtn = new JButton("刷新列表");
+
+        // 添加事件监听器
+        batchGradeBtn.addActionListener(e -> batchGradeAll());
+        exportResultsBtn.addActionListener(e -> exportResults());
+        viewDetailsBtn.addActionListener(e -> viewStudentDetails());
+        refreshBtn.addActionListener(e -> refreshResults());
+
+
+        panel.add(batchGradeBtn);
+        panel.add(exportResultsBtn);
+        panel.add(viewDetailsBtn);
+        panel.add(refreshBtn);
+
+        return panel;
+    }
+
+    /**
+     * 结果表格面板
+     * @return
+     */
+    private JPanel createTablePanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("批改结果汇总"));
+
+        // 创建表格模型
+        String[] columns = {"学生姓名", "习题集", "总题数", "平均正确率", "批改时间"};
+        tableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;   // 表格不可编辑
+            }
+        };
+
+        resultTable = new JTable(tableModel);
+        resultTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        JScrollPane scrollPane = new JScrollPane(resultTable);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        // 汇总信息
+        summaryLabel = new JLabel("总计: 0 名学生");
+        panel.add(summaryLabel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    /**
+     * 详细信息面板
+     * @return
+     */
+    private JPanel createDetailPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("详细批改信息"));
+        panel.setPreferredSize(new Dimension(800, 200));
+
+        detailArea = new JTextArea(8, 60);
+        detailArea.setEditable(false);
+        detailArea.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        JScrollPane scrollPane = new JScrollPane(detailArea);
+
+        panel.add(scrollPane, BorderLayout.CENTER);
+        return panel;
+    }
+
+    // 批量批改所以学生
+    private void batchGradeAll() {
+        // 扫描所有答题文件并进行批改
+        scanAndGradeAllAnswers();
+        JOptionPane.showMessageDialog(this, "批量批改完成！", "提示", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    // 扫描并批改所有答题文件
+    private void scanAndGradeAllAnswers() {
+        File exerciseDir = new File(FileConfig.EXERCISE_DIR);
+        File[] answerFiles = exerciseDir.listFiles((dir, name) ->
+                name.toLowerCase().endsWith("_answer.csv"));
+
+        if (answerFiles != null) {
+            for (File answerFile : answerFiles) {
+                processAnswerFile(answerFile);
+            }
+        }
+    }
+
+    // 处理单个答题文件
+    private void processAnswerFile(File answerFile) {
+        String filename = answerFile.getName();
+
+        try{
+            // 从文件名解析出 习题集文件名 和 学生姓名 exercises_set1_张三_answer.csv
+            if (!filename.toLowerCase().endsWith("_answer.csv")){
+                return;
+            }
+            String withoutSuffix = filename.substring(0,filename.toLowerCase().lastIndexOf("_answer.csv"));
+            int lastUnderscore = withoutSuffix.lastIndexOf("_");
+            if (lastUnderscore <= 0) {
+                // 文件名格式不符合约定，直接跳过
+                System.err.println("无法从答题文件名解析学生和习题集: " + filename);
+                return;
+            }
+
+            String baseName = withoutSuffix.substring(0, lastUnderscore);
+            String studentName = withoutSuffix.substring(lastUnderscore + 1);
+            String exerciseFileName = baseName + ".csv";
+
+            System.out.println("批改学生答题文件: " + filename +
+                    "  学生: " + studentName +
+                    "  习题集: " + exerciseFileName);
+
+            // 加载习题集
+            List<ExerciseItem> exercises = ExerciseManager.loadExerciseSetStatic(exerciseFileName);
+            if (exercises == null || exercises.isEmpty()) {
+                System.err.println("习题集为空或不存在，跳过: " + exerciseFileName);
+                return;
+            }
+
+            // 读取学生答案
+            Map<Integer, Integer> answers = new HashMap<>();
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(
+                            new FileInputStream(answerFile),
+                            StandardCharsets.UTF_8))) {
+
+                String line;
+                boolean firstLine = true;
+                while ((line = reader.readLine()) != null) {
+                    if (firstLine) {
+                        line = line.replace("\uFEFF", "");
+                        firstLine = false;
+                    }
+                    if (line.trim().isEmpty() || line.startsWith("题号")) {
+                        continue;
+                    }
+
+                    String[] parts = line.split(",", -1);
+                    if (parts.length >= 2) {
+                        try {
+                            int qNum = Integer.parseInt(parts[0].trim());
+                            String ansStr = parts[1].trim();
+                            if (!ansStr.isEmpty()) {
+                                int ans = Integer.parseInt(ansStr);
+                                answers.put(qNum, ans);
+                            }
+                        } catch (NumberFormatException ignore) {
+                            // 无效数字答案忽略
+                        }
+                    }
+                }
+            }
+            // 按照题号把答案填回ExerciseItem，并统计正确题数
+            int correctCount = 0;
+            for (ExerciseItem item : exercises) {
+                Integer ans = answers.get(item.getQuestionNumber());
+                if (ans != null) {
+                    item.setStudentAnswer(ans);
+                    if (item.isCorrect()) {
+                        correctCount++;
+                    }
+                } else {
+                    item.setStudentAnswer(null);
+                }
+            }
+
+            // 写入/追加_results.csv
+            saveBatchGradingResult(studentName, exerciseFileName, correctCount, exercises);
+
+            // 6）让当前批改结果立即体现在表格中
+            File resultFile = new File(FileConfig.EXERCISE_DIR
+                    + baseName + "_" + studentName + "_results.csv");
+            if (resultFile.exists()) {
+                loadSingleResultFile(resultFile);
+            }
+
+        } catch (IOException ex) {
+            System.err.println("批改答题文件失败: " + filename + " - " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    // 批量批改时保存结果文件
+    private void saveBatchGradingResult(String studentName,
+                                        String exerciseFile,
+                                        int correctCount,
+                                        List<ExerciseItem> exercises) {
+        FileConfig.ensureExerciseDirExists();
+
+        String baseName = exerciseFile.replace(".csv", "");
+        String resultFile = FileConfig.EXERCISE_DIR + baseName + "_" + studentName + "_results.csv";
+
+        boolean fileExists = new File(resultFile).exists();
+
+        try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(
+                new FileOutputStream(resultFile, true), StandardCharsets.UTF_8))) {
+
+            // 如果是新文件，写入UTF-8 BOM和表头
+            if (!fileExists) {
+                writer.write("\uFEFF");
+                writer.println("题号,题目,学生答案,正确答案,是否正确");
+            }
+
+            // 写入本次每一道题目的详细信息
+            for (ExerciseItem exercise : exercises) {
+                Integer studentAnswer = exercise.getStudentAnswer();
+                writer.printf("%d,%s,%s,%d,%s%n",
+                        exercise.getQuestionNumber(),
+                        exercise.getQuestion(),
+                        studentAnswer != null ? studentAnswer.toString() : "",
+                        exercise.getCorrectAnswer(),
+                        (studentAnswer != null && studentAnswer.equals(exercise.getCorrectAnswer())) ? "正确" : "错误");
+            }
+
+            // 追加统计信息
+            writer.println();
+            writer.printf("学生,%s%n", studentName);
+            writer.printf("习题集,%s%n", exerciseFile);
+            writer.printf("总题数,%d题%n", exercises.size());
+            writer.printf("答对题数,%d题%n", correctCount);
+            writer.printf("正确率,%.1f%%%n",
+                    exercises.size() > 0 ? (double) correctCount / exercises.size() * 100 : 0);
+
+            String gradingTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+            writer.printf("批改时间,%s%n", gradingTime);
+            writer.println(); // 空行分隔不同批改记录
+
+            System.out.println("批量批改结果已追加保存到: " + resultFile);
+        } catch (Exception e) {
+            System.err.println("保存批量批改结果失败: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
+    // 导出批改结果
+    private void exportResults() {
+        if (tableModel.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this,
+                    "没有可导出的批改结果",
+                    "提示", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JFileChooser fileChooser = new JFileChooser(exerciseManager.getBasePath());
+        fileChooser.setSelectedFile(new File("grading_summary.csv"));
+
+        int result = fileChooser.showSaveDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File outputFile = fileChooser.getSelectedFile();
+            try {
+                exportToCSV(outputFile);
+                JOptionPane.showMessageDialog(this,
+                        "批改结果已导出到: " + outputFile.getAbsolutePath(),
+                        "导出成功", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this,
+                        "导出失败: " + ex.getMessage(),
+                        "错误", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void viewStudentDetails() {
+        int selectedRow = resultTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this,
+                    "请先选择要查看的学生",
+                    "提示", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String studentName = (String) tableModel.getValueAt(selectedRow, 0);
+        String exerciseSet = (String) tableModel.getValueAt(selectedRow, 1);
+
+        try {
+            showStudentGradingDetails(studentName, exerciseSet);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "加载详细信息失败: " + ex.getMessage(),
+                    "错误", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void refreshResults() {
+        // 扫描目录中的批改结果文件
+        scanGradingResults();
+    }
+
+    public void scanGradingResults() {
+        // 清空表格
+        tableModel.setRowCount(0);
+
+        File resultsDir = new File(exerciseManager.getBasePath());
+        File[] resultFiles = resultsDir.listFiles((dir, name) ->
+                name.endsWith("_results.csv"));
+
+        if (resultFiles != null && resultFiles.length > 0) {
+            int totalStudents = 0;
+            double totalAccuracy = 0;
+
+            for (File file : resultFiles) {
+                GradingSummary summary = parseGradingSummary(file);
+                if (summary != null) {
+                    Object[] row = {
+                            summary.studentName,
+                            summary.exerciseSet,
+                            summary.totalQuestions,
+                            String.format("%.1f%%", summary.averageAccuracy),
+                            summary.gradingTime
+                    };
+                    tableModel.addRow(row);
+
+                    totalStudents++;
+                    totalAccuracy += summary.averageAccuracy;
+                }
+            }
+
+            // 更新汇总信息，所有学生的平均正确率
+            double avgAccuracy = totalStudents > 0 ? totalAccuracy / totalStudents : 0.0;
+            summaryLabel.setText(String.format("总计: %d 名学生, 平均正确率: %.1f%%",
+                    totalStudents, avgAccuracy));
+        } else {
+            summaryLabel.setText("未找到批改结果文件");
+        }
+    }
+
+    private GradingSummary parseGradingSummary(File resultFile) {
+        try {
+            // 从文件名解析学生姓名和习题集
+            String filename = resultFile.getName();
+            String baseName = filename.replace("_results.csv", "");
+            String[] parts = baseName.split("_");
+
+            if (parts.length >= 3) {
+                // 重新构建习题集文件名
+                StringBuilder exerciseSetBuilder = new StringBuilder();
+                for (int i = 0; i < parts.length - 1; i++) {
+                    if (i > 0) exerciseSetBuilder.append("_");
+                    exerciseSetBuilder.append(parts[i]);
+                }
+                exerciseSetBuilder.append(".csv");
+
+                String exerciseSet = exerciseSetBuilder.toString();
+                String studentName = parts[parts.length - 1];
+
+                // 从文件内容读取统计信息
+                List<String> lines = Files.readAllLines(resultFile.toPath(), StandardCharsets.UTF_8);
+                int totalQuestions = 0;
+                double accuracySum = 0.0;
+                int accuracyCount = 0;
+                String lastGradingTime = null;
+
+                for (String line : lines) {
+                    if (line.startsWith("总题数,")) {
+                        String[] stats = line.split(",");
+                        if (stats.length >= 2) {
+                            try {
+                                totalQuestions = Integer.parseInt(stats[1].replace("题", "").trim());
+                            } catch (NumberFormatException ignore) {
+                                // 单行格式有问题就忽略
+                            }
+                        }
+                    }else if (line.startsWith("正确率,")) {
+                        String[] stats = line.split(",");
+                        if (stats.length >= 2) {
+                            String percentStr = stats[1].replace("%", "").trim();
+                            try {
+                                double acc = Double.parseDouble(percentStr);
+                                accuracySum += acc;
+                                accuracyCount++;
+                            } catch (NumberFormatException ignore) {
+                                // 忽略单行解析错误
+                            }
+                        }
+                    }else if (line.startsWith("批改时间,")) {
+                        String[] stats = line.split(",");
+                        if (stats.length >= 2) {
+                            lastGradingTime = stats[1].trim();
+                        }
+                    }
+                }
+
+                // 一个学生多次练习同一套题的“平均正确率”
+                double averageAccuracy = accuracyCount > 0 ? accuracySum / accuracyCount : 0.0;
+
+                if (lastGradingTime == null) {
+                    lastGradingTime = new SimpleDateFormat("yyyy-MM-dd HH:mm")
+                            .format(new Date(resultFile.lastModified()));
+                }
+
+                return new GradingSummary(
+                        studentName, exerciseSet, totalQuestions, averageAccuracy, lastGradingTime
+                );
+            }
+        } catch (Exception e) {
+            System.err.println("解析批改结果文件失败: " + resultFile.getName());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private void loadSingleResultFile(File resultFile) {
+        GradingSummary summary = parseGradingSummary(resultFile);
+        if (summary != null) {
+            // 检查是否已存在该记录（同一学生 + 同一习题集）
+            for (int i = 0; i < tableModel.getRowCount(); i++) {
+                String existingStudent = (String) tableModel.getValueAt(i, 0);
+                String existingSet = (String) tableModel.getValueAt(i, 1);
+                if (existingStudent.equals(summary.studentName) &&
+                        existingSet.equals(summary.exerciseSet)) {
+                    // 更新现有记录
+                    tableModel.setValueAt(summary.totalQuestions, i, 2);
+                    tableModel.setValueAt(String.format("%.1f%%", summary.averageAccuracy), i, 3);
+                    tableModel.setValueAt(summary.gradingTime, i, 4);
+                    updateSummaryLabel();
+                    return;
+                }
+            }
+
+            // 添加新记录
+            Object[] row = {
+                    summary.studentName,
+                    summary.exerciseSet,
+                    summary.totalQuestions,
+                    String.format("%.1f%%", summary.averageAccuracy),
+                    summary.gradingTime
+            };
+            tableModel.addRow(row);
+
+            // 更新汇总信息
+            updateSummaryLabel();
+        }
+    }
+
+    private void exportToCSV(File outputFile) throws Exception {
+        StringBuilder csvContent = new StringBuilder();
+
+        csvContent.append("\uFEFF");
+
+        // 添加表头
+        for (int i = 0; i < tableModel.getColumnCount(); i++) {
+            csvContent.append(tableModel.getColumnName(i));
+            if (i < tableModel.getColumnCount() - 1) {
+                csvContent.append(",");
+            }
+        }
+        csvContent.append("\n");
+
+        // 添加数据行
+        for (int row = 0; row < tableModel.getRowCount(); row++) {
+            for (int col = 0; col < tableModel.getColumnCount(); col++) {
+                Object value = tableModel.getValueAt(row, col);
+                String cellValue = (value != null) ? value.toString() : "";
+
+                // 处理包含逗号、引号或换行符的单元格
+                if (cellValue.contains(",") || cellValue.contains("\"") || cellValue.contains("\n")) {
+                    // 转义双引号并用引号包围
+                    cellValue = "\"" + cellValue.replace("\"", "\"\"") + "\"";
+                }
+
+                csvContent.append(cellValue);
+                if (col < tableModel.getColumnCount() - 1) {
+                    csvContent.append(",");
+                }
+            }
+            csvContent.append("\n");
+        }
+
+
+        // 使用UTF-8编码写入文件
+        try (OutputStreamWriter writer = new OutputStreamWriter(
+                new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
+            writer.write(csvContent.toString());
+        }
+    }
+
+    private void showStudentGradingDetails(String studentName, String exerciseSet) {
+        String resultFile = exerciseManager.getBasePath() + exerciseSet.replace(".csv", "") +
+                "_" + studentName + "_results.csv";
+
+        File file = new File(resultFile);
+        if (file.exists()) {
+            try {
+                StringBuilder details = new StringBuilder();
+                details.append("学生: ").append(studentName).append("\n");
+                details.append("习题集: ").append(exerciseSet).append("\n\n");
+                details.append("详细批改结果:\n");
+                details.append("------------\n");
+
+                List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+                for (String line : lines) {
+                    details.append(line).append("\n");
+                }
+
+                detailArea.setText(details.toString());
+
+            } catch (Exception ex) {
+                detailArea.setText("读取详细批改信息失败: " + ex.getMessage());
+            }
+        } else {
+            detailArea.setText("未找到批改结果文件: " + resultFile);
+        }
+    }
+
+    private void updateSummaryLabel() {
+        int totalStudents = tableModel.getRowCount();
+        double totalAccuracy = 0.0;
+        for (int row = 0; row < totalStudents; row++) {
+            Object value = tableModel.getValueAt(row, 3);
+            if (value != null) {
+                String text = value.toString().replace("%", "").trim();
+                try {
+                    totalAccuracy += Double.parseDouble(text);
+                } catch (NumberFormatException ignore) {
+                    // 忽略单行解析错误
+                }
+            }
+        }
+
+        double avgAccuracy = totalStudents > 0 ? totalAccuracy / totalStudents : 0.0;
+        summaryLabel.setText(String.format("总计: %d 名学生, 平均正确率: %.1f%%",
+                totalStudents, avgAccuracy));
+    }
+
+    // 内部类用于存储批改汇总信息
+    private static class GradingSummary {
+        String studentName;
+        String exerciseSet;
+        int totalQuestions;
+        double averageAccuracy;
+        String gradingTime;
+
+        GradingSummary(String studentName, String exerciseSet, int totalQuestions, double averageAccuracy,String gradingTime) {
+            this.studentName = studentName;
+            this.exerciseSet = exerciseSet;
+            this.totalQuestions = totalQuestions;
+            this.averageAccuracy = averageAccuracy;
+            this.gradingTime = gradingTime;
+        }
+    }
+
+    // 在面板显示时自动扫描结果
+    @Override
+    public void setVisible(boolean visible) {
+        super.setVisible(visible);
+        if (visible) {
+            scanGradingResults();
+        }
+    }
+}
+
+
+
+====================
+File: .\GUIArithmeticOperate\GradingResult.java
+====================
+
+package GUIArithmeticOperate;
+
+/**
+ * 批改结果：封装批改信息
+ */
+public class GradingResult {
+    private int questionNumber;
+    private String question;
+    private int correctAnswer;
+    private int userAnswer;
+    private boolean isCorrect;
+
+    public GradingResult(int questionNumber, String question, int correctAnswer, int userAnswer, boolean isCorrect) {
+        this.questionNumber = questionNumber;
+        this.question = question;
+        this.correctAnswer = correctAnswer;
+        this.userAnswer = userAnswer;
+        this.isCorrect = isCorrect;
+    }
+
+    public int getQuestionNumber() {
+        return questionNumber;
+    }
+
+    public String getQuestion() {
+        return question;
+    }
+
+    public int getCorrectAnswer() {
+        return correctAnswer;
+    }
+
+    public int getUserAnswer() {
+        return userAnswer;
+    }
+
+    public boolean isCorrect() {
+        return isCorrect;
+    }
+}
+
+
+====================
+File: .\GUIArithmeticOperate\MainFrame.java
+====================
+
+package GUIArithmeticOperate;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+
+public class MainFrame extends JFrame {
+    private CardLayout cardLayout; // 卡片布局管理器
+    private JPanel mainPanel; // 主面板容器
+
+    // 各个功能面板
+    private ExerciseGenerationPanel generationPanel; // 题目生成
+    private ExerciseBasePanel basePanel;
+    private OnlinePracticePanel practicePanel;
+    private GradingPanel gradingPanel;
+
+    public MainFrame() {
+        initializeUI();
+        setupEventHandlers();
+    }
+
+    private void initializeUI() {
+        setTitle("数学口算练习系统");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(1000, 700);
+        setLocationRelativeTo(null);
+
+        // 主布局，卡片布局
+        cardLayout = new CardLayout();
+        mainPanel = new JPanel(cardLayout);
+
+        // 创建各个功能面板
+        generationPanel = new ExerciseGenerationPanel();
+        basePanel = new ExerciseBasePanel();
+        practicePanel = new OnlinePracticePanel();
+        gradingPanel = new GradingPanel();
+
+        mainPanel.add(generationPanel, "GENERATION");
+        mainPanel.add(basePanel, "BASE");
+        mainPanel.add(practicePanel, "PRACTICE");
+        mainPanel.add(gradingPanel, "GRADING");
+
+        // 导航菜单
+        JPanel navPanel = createNavigationPanel();
+
+        setLayout(new BorderLayout());
+        add(navPanel, BorderLayout.NORTH);
+        add(mainPanel, BorderLayout.CENTER);
+    }
+
+    /**
+     * 导航菜单面板
+     * @return
+     */
+    private JPanel createNavigationPanel() {
+        JPanel navPanel = new JPanel(new FlowLayout());
+        navPanel.setBackground(new Color(70, 130, 180));
+        navPanel.setPreferredSize(new Dimension(1000, 60));
+
+        String[] buttons = {
+                "题目生成", "算式基管理", "在线练习", "批量批改"
+        };
+
+        for (int i = 0; i < buttons.length; i++) {
+            JButton button = new JButton(buttons[i]);
+            button.setPreferredSize(new Dimension(120, 40));
+            button.setFont(new Font("微软雅黑", Font.BOLD, 14));
+            button.setBackground(new Color(100, 149, 237));
+            button.setForeground(Color.BLACK);
+
+            final String panelName = getPanelName(i);
+            button.addActionListener(e -> {
+                cardLayout.show(mainPanel, panelName);
+                // 切换到批改面板时自动刷新
+                if ("GRADING".equals(panelName)){
+                    gradingPanel.scanGradingResults();
+                }
+            });
+
+            navPanel.add(button);
+        }
+
+        return navPanel;
+    }
+
+    /**
+     * 根据索引获取面板名称
+     * @param index
+     * @return
+     */
+    private String getPanelName(int index) {
+        switch (index) {
+            case 0: return "GENERATION";
+            case 1: return "BASE";
+            case 2: return "PRACTICE";
+            case 3: return "GRADING";
+            default: return "GENERATION";
+        }
+    }
+
+    /**
+     * 面板间通信
+     */
+    private void setupEventHandlers() {
+        // 面板间通信的事件处理
+        generationPanel.addExerciseGeneratedListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // 当题目生成完成后，刷新在线练习面板的文件列表
+                practicePanel.refreshExerciseFiles();
+
+                // 显示提示信息
+                JOptionPane.showMessageDialog(MainFrame.this,
+                        "题目生成完成！习题集已更新，可以在在线练习中使用。",
+                        "生成成功",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
+
+        // 临时调试：添加测试按钮到导航栏
+        JButton debugBtn = new JButton("调试");
+        debugBtn.addActionListener(e -> {
+            System.out.println("=== 调试信息 ===");
+            System.out.println("当前工作目录: " + new File(".").getAbsolutePath());
+            practicePanel.refreshExerciseFiles();
+        });
+
+        // 获取导航面板并添加调试按钮
+        ((JPanel)getContentPane().getComponent(0)).add(debugBtn);
+    }
+}
+
+====================
+File: .\GUIArithmeticOperate\OnlinePracticePanel.java
+====================
+
+package GUIArithmeticOperate;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 在线练习面板，支持实时打分和统计
+ */
+public class OnlinePracticePanel extends JPanel {
+    private JComboBox<String> exerciseFileCombo;    // 习题集选择
+    private JTextField studentNameField;
+    private JTextArea questionArea;
+    private JTextField answerField;
+    private JButton prevBtn, nextBtn, submitBtn;
+    private JLabel timerLabel, scoreLabel;  // 计时和分数显示
+    private JLabel statusLabel; // 状态标签
+    private JPanel statsPanel;  // 统计面板
+
+    // 数据模型
+    private List<ExerciseItem> currentExercises;    // 当前习题集
+    private Map<Integer, Integer> studentAnswers;
+    private int currentQuestionIndex = 0;   // 题目索引
+    private Timer timer;
+    private long startTime;
+    private boolean isPracticeStarted = false;
+
+    // 统计相关
+    private int totalQuestions = 0;
+    private int answeredQuestions = 0;
+    private int correctAnswers = 0;
+
+    public OnlinePracticePanel() {
+        initializeUI();
+        setupTimer();
+    }
+
+    private void initializeUI() {
+        setLayout(new BorderLayout(10, 10));
+        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // 顶部控制面板
+        add(createControlPanel(), BorderLayout.NORTH);
+        // 题目显示面板
+        add(createQuestionPanel(), BorderLayout.CENTER);
+        // 底部按钮面板和统计面板
+        add(createBottomPanel(), BorderLayout.SOUTH);
+    }
+
+    private JPanel createControlPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("练习设置"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        // 选择习题集
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        panel.add(new JLabel("选择习题集:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        exerciseFileCombo = new JComboBox<>();
+        refreshExerciseFiles();
+        panel.add(exerciseFileCombo, gbc);
+
+        gbc.gridx = 2;
+        gbc.gridy = 0;
+        gbc.weightx = 0.0;
+        JButton refreshBtn = new JButton("刷新");
+        refreshBtn.addActionListener(e -> refreshExerciseFiles());
+        panel.add(refreshBtn, gbc);
+
+        // 学生姓名
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        panel.add(new JLabel("学生姓名:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        studentNameField = new JTextField();
+        panel.add(studentNameField, gbc);
+
+        gbc.gridx = 2;
+        gbc.gridy = 1;
+        panel.add(new JLabel(), gbc); // 空标签占位
+
+        // 用时、得分显示
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        timerLabel = new JLabel("用时: 00:00");
+        panel.add(timerLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        scoreLabel = new JLabel("得分: 0/0");
+        panel.add(scoreLabel, gbc);
+
+        gbc.gridx = 2;
+        gbc.gridy = 2;
+        statusLabel = new JLabel("准备开始");
+        statusLabel.setForeground(Color.BLUE);
+        panel.add(statusLabel, gbc);
+
+        return panel;
+    }
+
+    /**
+     * 题目练习模块面板
+     * @return
+     */
+    private JPanel createQuestionPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createTitledBorder("题目练习"));
+
+        questionArea = new JTextArea(5, 40);
+        questionArea.setEditable(false);
+        questionArea.setFont(new Font("微软雅黑", Font.PLAIN, 18));
+        questionArea.setLineWrap(true);
+        questionArea.setText("请先输入学生姓名并选择习题集，然后点击\"开始练习\"按钮");
+        JScrollPane scrollPane = new JScrollPane(questionArea);
+
+        JPanel answerPanel = new JPanel(new BorderLayout(10, 10));
+        answerPanel.add(new JLabel("您的答案: "), BorderLayout.WEST);
+        answerField = new JTextField();
+        answerField.setFont(new Font("微软雅黑", Font.PLAIN, 16));
+
+        // 添加答案输入监听
+        answerField.addActionListener(e -> saveAndShowNext());
+        answerPanel.add(answerField, BorderLayout.CENTER);
+
+        // 状态指示器，预留答题状态显示用
+        JLabel answerStatus = new JLabel(" ");
+        answerStatus.setPreferredSize(new Dimension(30, 30));
+        answerStatus.setHorizontalAlignment(SwingConstants.CENTER);
+        answerStatus.setFont(new Font("Arial", Font.BOLD, 20));
+        answerPanel.add(answerStatus, BorderLayout.EAST);
+
+        panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(answerPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    private JPanel createBottomPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+
+        // 按钮面板
+        JPanel buttonPanel = createButtonPanel();
+        panel.add(buttonPanel, BorderLayout.NORTH);
+
+        // 统计面板
+        statsPanel = createStatsPanel();
+        panel.add(statsPanel, BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    /**
+     * 按钮面板
+     * @return
+     */
+    private JPanel createButtonPanel() {
+        JPanel panel = new JPanel(new FlowLayout());
+
+        prevBtn = new JButton("上一题");
+        nextBtn = new JButton("下一题");
+        submitBtn = new JButton("开始练习");
+
+        prevBtn.setEnabled(false);
+        nextBtn.setEnabled(false);
+        answerField.setEnabled(false);
+
+        prevBtn.addActionListener(e -> showPreviousQuestion());
+        nextBtn.addActionListener(e -> showNextQuestion());
+        submitBtn.addActionListener(e -> {
+            if (!isPracticeStarted) {
+                startPractice();
+            } else {
+                submitAnswer();
+            }
+        });
+
+        panel.add(prevBtn);
+        panel.add(nextBtn);
+        panel.add(submitBtn);
+
+        return panel;
+    }
+
+    /**
+     * 答题信息情况
+     * @return
+     */
+    private JPanel createStatsPanel() {
+        JPanel panel = new JPanel(new GridLayout(1, 2, 10, 5));
+        panel.setBorder(BorderFactory.createTitledBorder("练习统计"));
+        panel.setPreferredSize(new Dimension(0, 80));
+
+        // 总题数
+        JPanel totalPanel = createStatItem("总题数", "0", Color.BLUE);
+        // 已答题
+        JPanel answeredPanel = createStatItem("已答题", "0", Color.ORANGE);
+
+        panel.add(totalPanel);
+        panel.add(answeredPanel);
+
+        return panel;
+    }
+
+    /**
+     * 答题情况
+     * @param title
+     * @param value
+     * @param color
+     * @return
+     */
+    private JPanel createStatItem(String title, String value, Color color) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+
+        JLabel titleLabel = new JLabel(title, SwingConstants.CENTER);
+        titleLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+
+        JLabel valueLabel = new JLabel(value, SwingConstants.CENTER);
+        valueLabel.setFont(new Font("微软雅黑", Font.BOLD, 16));
+        valueLabel.setForeground(color);
+
+        panel.add(titleLabel, BorderLayout.NORTH);
+        panel.add(valueLabel, BorderLayout.CENTER);
+
+        // 设置标签名称以便后续更新
+        valueLabel.setName(title);
+
+        return panel;
+    }
+
+    // 更新统计信息
+    private void updateStatistics() {
+        Component[] stats = statsPanel.getComponents();
+        for (Component comp : stats) {
+            if (comp instanceof JPanel) {
+                JPanel statPanel = (JPanel) comp;
+                Component[] children = statPanel.getComponents();
+                for (Component child : children) {
+                    if (child instanceof JLabel) {
+                        JLabel label = (JLabel) child;
+                        if (label.getName() != null) {
+                            switch (label.getName()) {
+                                case "总题数":
+                                    label.setText(String.valueOf(totalQuestions));
+                                    break;
+                                case "已答题":
+                                    label.setText(String.valueOf(answeredQuestions));
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void refreshExerciseFiles() {
+        exerciseFileCombo.removeAllItems();
+
+        // 扫描当前目录下的所有CSV文件
+        File exerciseDir = new File(FileConfig.EXERCISE_DIR);
+        System.out.println("刷新文件列表，扫描目录: " + exerciseDir.getAbsolutePath());
+
+        if (!exerciseDir.exists()) {
+            System.out.println("目录不存在，创建目录: " + exerciseDir.getAbsolutePath());
+            exerciseDir.mkdirs();
+        }
+
+        File[] csvFiles = exerciseDir.listFiles((dir, name) ->
+                name.toLowerCase().endsWith(".csv") &&
+                        !name.contains("_answer") &&
+                        !name.contains("_results"));
+
+        if (csvFiles != null && csvFiles.length > 0) {
+            // 按文件名排序（新的在前面）
+            Arrays.sort(csvFiles, (f1, f2) -> f2.getName().compareTo(f1.getName()));
+
+            for (File file : csvFiles) {
+                exerciseFileCombo.addItem(file.getName());
+                System.out.println("找到CSV文件: " + file.getName());
+            }
+
+            System.out.println("刷新习题文件列表，找到 " + csvFiles.length + " 个CSV文件");
+
+            // 如果组合框有项目，选择第一个
+            if (exerciseFileCombo.getItemCount() > 0) {
+                exerciseFileCombo.setSelectedIndex(0);
+            }
+        } else {
+            System.out.println("未找到任何CSV文件");
+            // 添加提示
+            exerciseFileCombo.addItem("请先生成题目");
+        }
+
+        // 刷新显示
+        exerciseFileCombo.revalidate();
+        exerciseFileCombo.repaint();
+    }
+
+    private void setupTimer() {
+        timer = new Timer(1000, e -> updateTimer());
+    }
+
+    private void updateTimer() {
+        long elapsed = System.currentTimeMillis() - startTime;
+        long seconds = elapsed / 1000;
+        long minutes = seconds / 60;
+        seconds = seconds % 60;
+        timerLabel.setText(String.format("用时: %02d:%02d", minutes, seconds));
+    }
+
+    /**
+     * 在线练习
+     */
+    private void startPractice() {
+        String studentName = studentNameField.getText().trim();
+        if (studentName.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "请输入学生姓名", "提示", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String selectedFile = (String) exerciseFileCombo.getSelectedItem();
+        if (selectedFile == null || selectedFile.equals("请先生成题目")) {
+            JOptionPane.showMessageDialog(this, "请选择有效的习题集", "提示", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            System.out.println("尝试加载习题集: " + selectedFile);
+
+            // 检查文件是否存在
+            String fullPath = FileConfig.EXERCISE_DIR + selectedFile;
+            File file = new File(fullPath);
+            if (!file.exists()) {
+                JOptionPane.showMessageDialog(this, "习题集文件不存在: " + fullPath, "错误", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            System.out.println("文件存在，路径: " + file.getAbsolutePath());
+
+            // 加载习题集
+            currentExercises = ExerciseManager.loadExerciseSetStatic(selectedFile);
+            if (currentExercises == null || currentExercises.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "习题集为空或加载失败", "错误", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            System.out.println("成功加载 " + currentExercises.size() + " 道题目");
+
+            studentAnswers = new HashMap<>();
+            currentQuestionIndex = 0;
+            isPracticeStarted = true;
+
+            // 初始化统计信息
+            totalQuestions = currentExercises.size();
+            answeredQuestions = 0;
+            correctAnswers = 0;
+            updateStatistics();
+
+            // 启用控件
+            prevBtn.setEnabled(false);
+            nextBtn.setEnabled(currentExercises.size() > 1);
+            answerField.setEnabled(true);
+            submitBtn.setText("提交答案");
+            statusLabel.setText("练习中...");
+            statusLabel.setForeground(Color.GREEN);
+
+            // 开始计时
+            startTime = System.currentTimeMillis();
+            timer.start();
+
+            showCurrentQuestion();
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "加载习题集失败: " + ex.getMessage(),
+                    "错误", JOptionPane.ERROR_MESSAGE);
+            System.err.println("加载习题集详细错误:");
+            ex.printStackTrace();
+        }
+    }
+
+    /**
+     * 显示当前题目
+     */
+    private void showCurrentQuestion() {
+        if (currentExercises == null || currentExercises.isEmpty()) return;
+
+        ExerciseItem exercise = currentExercises.get(currentQuestionIndex);
+
+        // 显示题目信息
+        String questionText = String.format("第%d题 [%s]\n%s = ",
+                currentQuestionIndex + 1,
+                exercise.getType(),
+                exercise.getQuestion());
+
+        questionArea.setForeground(Color.BLACK);
+        questionArea.setText(questionText);
+
+        // 显示已保存的答案
+        Integer savedAnswer = studentAnswers.get(currentQuestionIndex);
+        answerField.setText(savedAnswer != null ? savedAnswer.toString() : "");
+        answerField.requestFocus();
+
+        // 更新按钮状态
+        prevBtn.setEnabled(currentQuestionIndex > 0);
+        nextBtn.setEnabled(currentQuestionIndex < currentExercises.size() - 1);
+
+        // 更新进度
+        scoreLabel.setText(String.format("进度: %d/%d", currentQuestionIndex + 1, currentExercises.size()));
+
+        // 更新状态标签
+        updateStatusLabel();
+    }
+
+
+    private void updateStatusLabel() {
+        if (currentExercises == null) return;
+
+        ExerciseItem currentExercise = currentExercises.get(currentQuestionIndex);
+        if (currentExercise.getStudentAnswer() != null) {
+            if (currentExercise.isCorrect()) {
+                statusLabel.setText("回答正确 ✓");
+                statusLabel.setForeground(Color.GREEN);
+            } else {
+                statusLabel.setText("回答错误 ✗");
+                statusLabel.setForeground(Color.RED);
+            }
+        } else {
+            statusLabel.setText("等待答题...");
+            statusLabel.setForeground(Color.BLUE);
+        }
+    }
+
+    private void showPreviousQuestion() {
+        saveCurrentAnswer();
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            showCurrentQuestion();
+        }
+    }
+
+    private void showNextQuestion() {
+        saveCurrentAnswer();
+        if (currentQuestionIndex < currentExercises.size() - 1) {
+            currentQuestionIndex++;
+            showCurrentQuestion();
+        }
+    }
+
+    // 保存答案并自动下一题
+    private void saveAndShowNext() {
+        saveCurrentAnswer();
+        if (currentQuestionIndex < currentExercises.size() - 1) {
+            currentQuestionIndex++;
+            showCurrentQuestion();
+        } else {
+            // 如果是最后一题，提示提交
+            JOptionPane.showMessageDialog(this,
+                    "已经是最后一题了，请点击\"提交答案\"按钮完成练习",
+                    "提示", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    /**
+     * 保存当前答案
+     */
+    private void saveCurrentAnswer() {
+        if (currentExercises == null || currentQuestionIndex < 0 ||
+                currentQuestionIndex >= currentExercises.size()) {
+            return;
+        }
+
+        ExerciseItem currentExercise = currentExercises.get(currentQuestionIndex);
+        Integer previousAnswer = currentExercise.getStudentAnswer();
+        boolean wasCorrect = (previousAnswer != null &&
+                previousAnswer.equals(currentExercise.getCorrectAnswer()));
+
+        String answerText = answerField.getText().trim();
+        // 用户把答案清空：从“已作答”恢复为“未作答“
+        if (answerText.isEmpty()) {
+            if (previousAnswer != null) {
+                answeredQuestions--;
+                if (wasCorrect) {
+                    correctAnswers--;
+                }
+                currentExercise.setStudentAnswer(null);
+                studentAnswers.remove(currentQuestionIndex);
+                updateStatistics();
+            }
+            return;
+        }
+        // 输入新答案
+        try {
+            int answer = Integer.parseInt(answerText);
+            studentAnswers.put(currentQuestionIndex, answer);
+            currentExercise.setStudentAnswer(answer);
+
+            // 统计“已作答题数”
+            if (previousAnswer == null) {
+                answeredQuestions++;
+            }
+            boolean isNowCorrect = currentExercise.isCorrect();
+            if (isNowCorrect && !wasCorrect) {
+                correctAnswers++;
+            } else if (!isNowCorrect && wasCorrect) {
+                correctAnswers--;
+            }
+
+            updateStatistics();
+        } catch (NumberFormatException e) {
+            // 非数字输入仍然忽略，不改变当前统计
+        }
+
+    }
+
+    /**
+     * 提交答案并显示详细结果
+     */
+    private void submitAnswer() {
+        saveCurrentAnswer();
+
+        // 计算最终得分
+        int finalCorrectCount = 0;
+        if (currentExercises != null) {
+            for (ExerciseItem exercise : currentExercises) {
+                if (exercise.isCorrect()) {
+                    finalCorrectCount++;
+                }
+            }
+        }
+
+        // 停止计时
+        timer.stop();
+
+        // 显示详细结果
+        showDetailedResults(finalCorrectCount);
+
+        // 保存学生答题文件和批改结果
+        saveStudentPracticeResults(finalCorrectCount);
+
+        // 重置状态
+        resetPractice();
+    }
+
+    // 显示详细结果对话框 - 支持颜色显示，并支持导出本次错题
+    private void showDetailedResults(int correctCount) {
+        // 创建结果对话框
+        JDialog resultDialog = new JDialog((Frame)SwingUtilities.getWindowAncestor(this), "练习结果", true);
+        resultDialog.setLayout(new BorderLayout(10, 10));
+        resultDialog.setSize(600, 500);
+        resultDialog.setLocationRelativeTo(this);
+
+        // 标题
+        JLabel titleLabel = new JLabel("练习完成!", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("微软雅黑", Font.BOLD, 18));
+        titleLabel.setForeground(Color.BLUE);
+        resultDialog.add(titleLabel, BorderLayout.NORTH);
+
+        // 使用JTextPane来支持颜色显示
+        JTextPane resultPane = new JTextPane();
+        resultPane.setEditable(false);
+        resultPane.setFont(new Font("微软雅黑", Font.PLAIN, 14));
+        resultPane.setContentType("text/html");
+
+        // 用于导出错题的临时列表：题号,题型,题目,学生答案,正确答案
+        List<String[]> wrongQuestions = new java.util.ArrayList<>();
+
+        // 构建HTML格式的结果文本
+        StringBuilder resultHtml = new StringBuilder();
+        resultHtml.append("<html><body style='font-family:微软雅黑; font-size:12pt; margin:10px'>");
+
+        // 统计信息
+        resultHtml.append("<div style='margin-bottom:15px'>");
+        resultHtml.append("<b>练习结果统计</b><br>");
+        resultHtml.append(String.format("学生姓名: %s<br>", studentNameField.getText()));
+        resultHtml.append(String.format("习题集: %s<br>", exerciseFileCombo.getSelectedItem()));
+        resultHtml.append(String.format("总题数: %d题<br>", totalQuestions));
+        resultHtml.append(String.format("答对题数: %d题<br>", correctCount));
+
+        double accuracy = totalQuestions > 0 ? (double)correctCount/totalQuestions*100 : 0;
+        String accuracyColor = accuracy >= 80 ? "green" : (accuracy >= 60 ? "orange" : "red");
+        resultHtml.append(String.format("正确率: <span style='color:%s; font-weight:bold'>%.1f%%</span><br>",
+                accuracyColor, accuracy));
+        resultHtml.append(String.format("用时: %s<br>", timerLabel.getText().replace("用时: ", "")));
+        resultHtml.append("</div>");
+
+        // 各题详情
+        resultHtml.append("<b>各题详情:</b><br>");
+        resultHtml.append("<hr>");
+
+        for (int i = 0; i < currentExercises.size(); i++) {
+            ExerciseItem exercise = currentExercises.get(i);
+            Integer studentAnswer = exercise.getStudentAnswer();
+            Integer correctAnswer = exercise.getCorrectAnswer();
+            boolean isCorrect = (studentAnswer != null && studentAnswer.equals(correctAnswer));
+
+            // 题目和正确答案
+            resultHtml.append(String.format("%d. %s = <b>%d</b>",
+                    i + 1, exercise.getQuestion(), correctAnswer));
+
+            // 学生作答情况
+            if (studentAnswer != null) {
+                if (isCorrect) {
+                    resultHtml.append(String.format(
+                            " <span style='color:green; font-weight:bold'>" +
+                                    "✓ 正确 (你的答案: %d)</span>",
+                            studentAnswer));
+                } else {
+                    resultHtml.append(String.format(
+                            " <span style='color:red; font-weight:bold'>" +
+                                    "✗ 错误 (你的答案: %d)</span>",
+                            studentAnswer));
+                }
+            } else {
+                resultHtml.append(" <span style='color:gray'>○ 未作答</span>");
+            }
+            resultHtml.append("<br>");
+
+            // 收集错题集或未作答，用于导出
+            if (!isCorrect){
+                wrongQuestions.add(new String[]{
+                        String.valueOf(i+1),
+                        exercise.getType(),
+                        exercise.getQuestion(),
+                        studentAnswer != null ? studentAnswer.toString() : "",
+                        String.valueOf(correctAnswer)
+                });
+            }
+        }
+
+        resultHtml.append("</body></html>");
+
+        resultPane.setText(resultHtml.toString());
+
+        // 确保文本从顶部开始显示
+        resultPane.setCaretPosition(0);
+
+        JScrollPane scrollPane = new JScrollPane(resultPane);
+        resultDialog.add(scrollPane, BorderLayout.CENTER);
+
+        // 底部按钮：导出错题+确定
+        JPanel buttonPanel = new JPanel();
+        JButton exportWrongButton = new JButton("导出错题");
+        exportWrongButton.addActionListener(e -> {
+            String studentName = studentNameField.getText().trim();
+            String exerciseFile = (String) exerciseFileCombo.getSelectedItem();
+
+            if (studentName.isEmpty() || exerciseFile == null ||
+                    exerciseFile.equals("请先生成题目")) {
+                JOptionPane.showMessageDialog(resultDialog,
+                        "学生姓名或习题集信息无效，无法导出错题。",
+                        "提示", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            if (wrongQuestions.isEmpty()) {
+                JOptionPane.showMessageDialog(resultDialog,
+                        "本次练习没有错题，无需导出。",
+                        "提示", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            try {
+                FileConfig.ensureExerciseDirExists();
+
+                String baseName = exerciseFile.replace(".csv", "");
+                String wrongFile = FileConfig.EXERCISE_DIR
+                        + baseName + "_" + studentName + "_wrong.csv";
+
+                try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(
+                        new FileOutputStream(wrongFile), StandardCharsets.UTF_8))) {
+                    writer.write("\uFEFF");
+                    writer.println("题号,题型,题目,学生答案,正确答案");
+                    for (String[] rec : wrongQuestions) {
+                        writer.printf("%s,%s,\"%s\",%s,%s%n",
+                                rec[0], rec[1], rec[2], rec[3], rec[4]);
+                    }
+                }
+                JOptionPane.showMessageDialog(resultDialog,
+                        "错题已导出到: " + wrongFile,
+                        "导出成功", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(resultDialog,
+                        "导出错题失败: " + ex.getMessage(),
+                        "错误", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
+        });
+        JButton okButton = new JButton("确定");
+        okButton.addActionListener(e -> resultDialog.dispose());
+        buttonPanel.add(exportWrongButton);
+        buttonPanel.add(okButton);
+        resultDialog.add(buttonPanel, BorderLayout.SOUTH);
+
+        resultDialog.setVisible(true);
+    }
+
+    private void saveStudentPracticeResults(int correctCount) {
+        try {
+            String studentName = studentNameField.getText().trim();
+            String selectedFile = (String) exerciseFileCombo.getSelectedItem();
+
+            if (studentName.isEmpty() || selectedFile == null || selectedFile.equals("请先生成题目")) {
+                return;
+            }
+
+            // 1. 保存学生答题文件
+            saveStudentAnswersToFile(studentName, selectedFile);
+
+            // 2. 保存批改结果
+            saveGradingResultsToFile(studentName, selectedFile, correctCount);
+
+            System.out.println("学生答题结果和批改结果已保存");
+
+        } catch (Exception ex) {
+            System.err.println("保存学生答题结果失败: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    // 保存学生答题文件,追加模式
+    // 保存学生答题文件 - 追加模式
+    private void saveStudentAnswersToFile(String studentName, String exerciseFile) {
+        FileConfig.ensureExerciseDirExists();
+
+        String baseName = exerciseFile.replace(".csv", "");
+        String answerFile = FileConfig.EXERCISE_DIR + baseName + "_" + studentName + "_answer.csv";
+
+        boolean fileExists = new File(answerFile).exists();
+
+        try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(
+                new FileOutputStream(answerFile, true), StandardCharsets.UTF_8))) { // true 表示追加模式
+
+            // 如果是新文件，写入UTF-8 BOM和表头
+            if (!fileExists) {
+                writer.write("\uFEFF");
+                writer.println("题号,学生答案");
+            }
+
+            for (int i = 0; i < currentExercises.size(); i++) {
+                ExerciseItem exercise = currentExercises.get(i);
+                String answerStr = (exercise.getStudentAnswer() != null) ?
+                        String.valueOf(exercise.getStudentAnswer()) : "未作答";
+                writer.printf("%d,%s%n", i + 1, answerStr);
+            }
+
+            System.out.println("学生答案已追加保存到: " + answerFile);
+
+        } catch (Exception e) {
+            System.err.println("保存学生答案失败: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // 保存批改结果文件 - 追加模式
+    private void saveGradingResultsToFile(String studentName, String exerciseFile, int correctCount) {
+        FileConfig.ensureExerciseDirExists();
+
+        String baseName = exerciseFile.replace(".csv", "");
+        String resultFile = FileConfig.EXERCISE_DIR + baseName + "_" + studentName + "_results.csv";
+
+        boolean fileExists = new File(resultFile).exists();
+
+        try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(
+                new FileOutputStream(resultFile, true), StandardCharsets.UTF_8))) { // true 表示追加模式
+
+            // 如果是新文件，写入UTF-8 BOM和表头
+            if (!fileExists) {
+                writer.write("\uFEFF");
+                writer.println("题号,题目,正确答案,学生答案,结果");
+            }
+
+            // 生成详细的批改结果
+            for (int i = 0; i < currentExercises.size(); i++) {
+                ExerciseItem exercise = currentExercises.get(i);
+                String studentAnswerStr = (exercise.getStudentAnswer() != null) ?
+                        String.valueOf(exercise.getStudentAnswer()) : "未作答";
+                String resultStr = exercise.isCorrect() ? "正确" : "错误";
+
+                writer.printf("%d,\"%s\",%d,%s,%s%n",
+                        i + 1,
+                        exercise.getQuestion(),
+                        exercise.getCorrectAnswer(),
+                        studentAnswerStr,
+                        resultStr);
+            }
+
+            // 统计信息
+            writer.println();
+            writer.printf("学生姓名,%s%n", studentName);
+            writer.printf("习题集,%s%n", exerciseFile);
+            writer.printf("总题数,%d题%n", currentExercises.size());
+            writer.printf("答对题数,%d题%n", correctCount);
+            writer.printf("正确率,%.1f%%%n",
+                    currentExercises.size() > 0 ? (double) correctCount / currentExercises.size() * 100 : 0);
+
+            // 批改时间
+            String gradingTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+            writer.printf("批改时间,%s%n", gradingTime);
+            writer.println(); // 空行分隔不同批改记录
+
+            System.out.println("批改结果已追加保存到: " + resultFile);
+
+        } catch (Exception e) {
+            System.err.println("保存批改结果失败: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void resetPractice() {
+        isPracticeStarted = false;
+        currentExercises = null;
+        studentAnswers = null;
+        currentQuestionIndex = 0;
+
+        prevBtn.setEnabled(false);
+        nextBtn.setEnabled(false);
+        answerField.setEnabled(false);
+        submitBtn.setText("开始练习");
+        statusLabel.setText("准备开始");
+        statusLabel.setForeground(Color.BLUE);
+
+        questionArea.setText("请先输入学生姓名并选择习题集，然后点击\"开始练习\"按钮");
+        answerField.setText("");
+        scoreLabel.setText("得分: 0/0");
+        timerLabel.setText("用时: 00:00");
+
+        // 重置统计信息
+        totalQuestions = 0;
+        answeredQuestions = 0;
+        correctAnswers = 0;
+        updateStatistics();
+    }
+}
+
+====================
+File: .\GUIArithmeticOperate\OperationBase.java
+====================
+
+package GUIArithmeticOperate;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * 算式基类：负责构建加法减法算式基
+ * 遵循单一职责原则：只负责算式的生成和管理
+ */
+public class OperationBase {
+    private List<BinaryOperation> additionBase;     // 加法算式基
+    private List<BinaryOperation> subtractionBase;  // 减法算式基
+    private int maxOperand;
+
+    public OperationBase(int maxOperand){
+        this.maxOperand = maxOperand;
+        this.additionBase = new ArrayList<>();
+        this.subtractionBase = new ArrayList<>();
+        generateOperationBases();
+    }
+
+    public OperationBase(){}
+
+    /**
+     * 生成加减法算式基，通过行列索引进行约束
+     */
+    private void generateOperationBases(){
+        generateAdditionBase();
+        generateSubtractionBase();
+    }
+
+    /**
+     * 加法算式基
+     * 假设约束：行索引i <= 列索引j
+     */
+    private void generateAdditionBase(){
+        additionBase.clear();
+        for (int i = 0;i <= maxOperand;i++){
+            for(int j = i;j <= maxOperand;j++){     // 正斜三角形 j>=i
+                AdditionOperation operation = new AdditionOperation(i, j);
+                if (operation.isValid()){
+                    additionBase.add(operation);
+                }
+            }
+        }
+    }
+
+    /**
+     * 减法算式基
+     * 假设约束：行索引i >= 列索引j
+     */
+    private void generateSubtractionBase(){
+        subtractionBase.clear();
+        for (int i = 0; i <= maxOperand ; i++) {
+            for (int j = 0; j <= i; j++) {
+                SubtractOperation operation = new SubtractOperation(i, j);
+                if (operation.isValid()){
+                    subtractionBase.add(operation);
+                }
+            }
+        }
+    }
+
+    public List<BinaryOperation> getAdditionBase() {
+        return new ArrayList<>(additionBase);
+    }
+
+    public List<BinaryOperation> getSubtractionBase() {
+        return new ArrayList<>(subtractionBase);
+    }
+
+    public List<BinaryOperation> getAllOperations() {
+        List<BinaryOperation> all = new ArrayList<>();
+        all.addAll(additionBase);
+        all.addAll(subtractionBase);
+        return all;
+    }
+
+    public int getAdditionBaseSize() {
+        return additionBase.size();
+    }
+
+    public int getSubtractionBaseSize() {
+        return subtractionBase.size();
+    }
+
+    /**
+     * 获取指定数量的随机加法算式
+     */
+    public List<BinaryOperation> getRandomAdditionOperations(int count) {
+        return getRandomOperations(additionBase, count);
+    }
+
+    /**
+     * 获取指定数量的随机减法算式
+     */
+    public List<BinaryOperation> getRandomSubtractionOperations(int count) {
+        return getRandomOperations(subtractionBase, count);
+    }
+
+    /**
+     * 从算式基中随机选取指定数量的算式
+     */
+    private List<BinaryOperation> getRandomOperations(List<BinaryOperation> base, int count){
+        if (base.isEmpty()){
+            System.out.println("算式基为空！！！");
+            return new ArrayList<>();
+        }
+
+        // 算式基中题目不足时进行扩展
+        if (count >= base.size()){
+            return new ArrayList<>(base);
+        }
+
+        List<BinaryOperation> temp = new ArrayList<>(base);
+        Collections.shuffle(temp);   // 随机打乱列表顺序，从算式基中随机选择指定数量的题目，避免每次都选择相同的题目
+
+        return temp.subList(0, count);
+    }
+}
+
+====================
+File: .\GUIArithmeticOperate\SubtractOperation.java
+====================
+
+package GUIArithmeticOperate;
+
+public class SubtractOperation extends BinaryOperation{
+    public SubtractOperation(int op1, int op2) {
+        super(op1, op2, '-');
+    }
+
+    @Override
+    public int calculate() {
+        return operand1 - operand2;
+    }
+
+    @Override
+    public boolean isValid() {
+        return operand1 >= operand2;
+    }  // 确保减法运算结果不小于0
+}
+
+
