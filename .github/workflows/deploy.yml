@@ -1,0 +1,54 @@
+name: Build & Deploy Docker App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: "17"
+        distribution: "temurin"
+
+    - name: Build Java Program
+      run: |
+        mkdir -p out
+        javac -encoding UTF-8 $(find src -name "*.java") -d out
+
+    - name: Build Docker Image
+      run: |
+        docker build -t guitest-app:latest .
+
+    - name: Copy SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SERVER_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+
+    - name: Deploy to Server
+      run: |
+        ssh -o StrictHostKeyChecking=no -p ${{ secrets.SERVER_PORT }} \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+            docker stop guitest || true;
+            docker rm guitest || true;
+            docker rmi guitest-app || true;
+          "
+
+        scp -P ${{ secrets.SERVER_PORT }} ./Dockerfile ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/root/GUITest/
+        scp -P ${{ secrets.SERVER_PORT }} ./start.sh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/root/GUITest/
+
+        ssh -o StrictHostKeyChecking=no -p ${{ secrets.SERVER_PORT }} \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+            cd /root/GUITest && docker build -t guitest-app . &&
+            docker run -d --name guitest -p 6080:6080 guitest-app
+          "
