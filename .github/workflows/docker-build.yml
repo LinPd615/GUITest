@@ -1,0 +1,46 @@
+name: CI & Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build & Push
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: |
+          yourname/guitest:latest
+          yourname/guitest:${{ github.sha }}
+
+    - name: Create Release Notes
+      id: notes
+      uses: release-drafter/release-drafter@v6
+      with:
+        config-name: release-drafter.yml
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v-${{ github.run_number }}
+        name: Release ${{ github.run_number }}
+        body: ${{ steps.notes.outputs.body }}
