@@ -148,7 +148,7 @@ public class GradingPanel extends JPanel {
         String filename = answerFile.getName();
 
         try{
-            // 从文件名解析出 习题集文件名 和 学生姓名 exercises_set1_张三_answer.csv
+            // 从文件名解析出 习题集文件名 和 学生姓名
             if (!filename.toLowerCase().endsWith("_answer.csv")){
                 return;
             }
@@ -163,6 +163,14 @@ public class GradingPanel extends JPanel {
             String baseName = withoutSuffix.substring(0, lastUnderscore);
             String studentName = withoutSuffix.substring(lastUnderscore + 1);
             String exerciseFileName = baseName + ".csv";
+
+            // 构造结果文件的路径
+            File resultFile = new File(FileConfig.EXERCISE_DIR + baseName + "_" + studentName + "_results.csv");
+            // 判断是否需要批改，结果文件已存在且比答题文件修改时间更晚，说明已经批改过来不用再批改
+            if (resultFile.exists() && resultFile.lastModified() > answerFile.lastModified()) {
+                System.out.println("跳过已批改的文件: " + filename);
+                return; // 直接结束，不进行后续的重复批改
+            }
 
             System.out.println("批改学生答题文件: " + filename +
                     "  学生: " + studentName +
@@ -226,9 +234,9 @@ public class GradingPanel extends JPanel {
             saveBatchGradingResult(studentName, exerciseFileName, correctCount, exercises);
 
             // 6）让当前批改结果立即体现在表格中
-            File resultFile = new File(FileConfig.EXERCISE_DIR
+            File resultsFile = new File(FileConfig.EXERCISE_DIR
                     + baseName + "_" + studentName + "_results.csv");
-            if (resultFile.exists()) {
+            if (resultsFile.exists()) {
                 loadSingleResultFile(resultFile);
             }
 
@@ -473,7 +481,8 @@ public class GradingPanel extends JPanel {
                     // 更新现有记录
                     tableModel.setValueAt(summary.totalQuestions, i, 2);
                     tableModel.setValueAt(String.format("%.1f%%", summary.averageAccuracy), i, 3);
-                    tableModel.setValueAt(summary.gradingTime, i, 4);
+                    tableModel.setValueAt(String.format("%.1f%%", summary.latestAccuracy), i, 4);
+                    tableModel.setValueAt(summary.gradingTime, i, 5);
                     updateSummaryLabel();
                     return;
                 }
