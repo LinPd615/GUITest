@@ -1,0 +1,48 @@
+name: Build & Deploy Docker App
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Build Java Program
+      run: |
+        mkdir -p /app/out
+        javac -encoding UTF-8 $(find src -name "*.java") -d out
+
+    - name: Build Docker Image
+      run: |
+        docker build -t guitest-gui:latest .
+
+    - name: Copy SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SERVER_KEY }}" > ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519
+
+    - name: Deploy to Server
+      run: |
+        ssh -o StrictHostKeyChecking=no -p ${{ secrets.SERVER_PORT }} \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+          docker stop guitest-gui || true &&
+          docker rm guitest-gui || true &&
+          cd /root/GUITest &&
+          git pull &&
+          docker build -t guitest-gui . &&
+          docker run -d --name guitest-gui -p 6080:6080 guitest-gui
+        "
