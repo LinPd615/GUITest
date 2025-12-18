@@ -1,3 +1,4 @@
+
 package GUIArithmeticOperate;
 
 import javax.swing.*;
@@ -424,29 +425,8 @@ public class OnlinePracticePanel extends JPanel {
 
         // 更新进度
         scoreLabel.setText(String.format("进度: %d/%d", currentQuestionIndex + 1, currentExercises.size()));
-
-        // 更新状态标签
-        updateStatusLabel();
     }
 
-
-    private void updateStatusLabel() {
-        if (currentExercises == null) return;
-
-        ExerciseItem currentExercise = currentExercises.get(currentQuestionIndex);
-        if (currentExercise.getStudentAnswer() != null) {
-            if (currentExercise.isCorrect()) {
-                statusLabel.setText("回答正确 ✓");
-                statusLabel.setForeground(Color.GREEN);
-            } else {
-                statusLabel.setText("回答错误 ✗");
-                statusLabel.setForeground(Color.RED);
-            }
-        } else {
-            statusLabel.setText("等待答题...");
-            statusLabel.setForeground(Color.BLUE);
-        }
-    }
 
     private void showPreviousQuestion() {
         saveCurrentAnswer();
@@ -566,7 +546,7 @@ public class OnlinePracticePanel extends JPanel {
         resetPractice();
     }
 
-    // 显示详细结果对话框 - 支持颜色显示，并支持导出本次错题
+    // 显示详细结果对话框 - 支持颜色显示，导出本次错题
     private void showDetailedResults(int correctCount) {
         // 创建结果对话框
         JDialog resultDialog = new JDialog((Frame)SwingUtilities.getWindowAncestor(this), "练习结果", true);
@@ -693,10 +673,10 @@ public class OnlinePracticePanel extends JPanel {
                 try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(
                         new FileOutputStream(wrongFile), StandardCharsets.UTF_8))) {
                     writer.write("\uFEFF");
-                    writer.println("题号,题型,题目,学生答案,正确答案");
+                    writer.println("题号,题型,题目,正确答案,学生答案");
                     for (String[] rec : wrongQuestions) {
                         writer.printf("%s,%s,\"%s\",%s,%s%n",
-                                rec[0], rec[1], rec[2], rec[3], rec[4]);
+                                rec[0], rec[1], rec[2], rec[4], rec[3]);
                     }
                 }
                 JOptionPane.showMessageDialog(resultDialog,
